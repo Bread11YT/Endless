@@ -245,6 +245,20 @@ body.sheet #sheet{display:flex;flex-direction:column;height:min(360px,62vh)}
 .tdn .nx{border-color:color-mix(in srgb,var(--c) 70%,#000)}.tdn .nx b{color:var(--c)}
 .tdn .ar{font-style:normal;color:#a99a76;font-size:18px}
 #tree .tdet button.go{width:100%;min-height:46px;font-size:16px}
+
+/* ===== телефон: подсказки не ужимаются, а в вертикальной ориентации у каждого элемента своя зона ===== */
+#info,#drop{width:max-content}
+#drop{top:calc(env(safe-area-inset-top,0px) + 56px)} /* раньше left:50% без ширины ужимал плашку до половины экрана и вытягивал её в высокую колонку */
+body.portrait #top{flex-wrap:nowrap;gap:4px;max-width:calc(100% - 12px)}
+body.portrait #top span{font-size:13px;padding:3px 8px}
+body.portrait #tr{top:calc(env(safe-area-inset-top,0px) + 40px);left:calc(env(safe-area-inset-left,0px) + 8px);justify-content:flex-end}
+body.portrait #tr{gap:4px}
+body.portrait #tr button{min-height:44px;min-width:42px;font-size:18px;padding:2px 8px}
+body.portrait #wrap{place-items:start center;padding-top:calc(env(safe-area-inset-top,0px) + 96px)} /* карта прижата под HUD, низ экрана свободен для панелей */
+body.portrait #drop{top:calc(var(--mapb,300px) + 12px)}
+body.portrait #rot{top:calc(var(--mapb,300px) + 64px)}
+body.portrait #info{font-size:12.5px}
+body.portrait.sheet #sheet{height:min(360px,calc(100% - var(--mapb,300px) - 82px))}
 </style>
 </head>
 <body>
@@ -266,7 +280,7 @@ body.sheet #sheet{display:flex;flex-direction:column;height:min(360px,62vh)}
 <div id="tools"></div>
 <div id="sheet"><div id="invh"><span><i data-i="bag"></i> Инвентарь</span><span id="invc"></span><button id="sheetx" aria-label="Закрыть"><i data-i="close"></i></button></div><div id="inv"></div></div>
 <div id="bar"></div>
-<div id="rot">Поверни телефон горизонтально — карта займёт весь экран</div>
+<div id="rot">Карту можно увеличить щипком двумя пальцами или кнопкой-лупой. Или поверни телефон горизонтально</div>
 <div id="tree"></div>
 <div id="over"><div id="overT"></div><button class="go" id="restart">Играть снова</button></div>
 <script>
@@ -291,6 +305,7 @@ IB.trap='<path d="M-11 8H11V11H-11Z" fill="#6a5a46" stroke="#2a2014" stroke-widt
 IB.road='<path d="M-4 11L-2.5-11H2.5L4 11Z" fill="#c9a46a" stroke="#5e4a30" stroke-width="1.4"/><path d="M0-8V-5M0-2V2M0 5V8" stroke="#fff3c0" stroke-width="1.6"/>';
 IB.portal='<circle r="9.5" fill="#12261a" stroke="#6dffa8" stroke-width="1.6"/><circle r="5.2" stroke="#6dffa8" stroke-width="1.3" stroke-dasharray="3 2.5"/><circle r="1.8" fill="#bfffd8" stroke="none"/>';
 const I={};for(const k in IB)I[k]=`<svg class="ui" viewBox="-12 -12 24 24" aria-hidden="true">${IB[k]}</svg>`;
+I.zoom='<svg class="ui" viewBox="-12 -12 24 24" aria-hidden="true"><circle cx="-2" cy="-2" r="7.5"/><path d="M3.5 3.5L10 10M-2-5.2V1.2M-5.2-2H1.2"/></svg>';
 I.spshop='<svg class="ui" viewBox="-12 -12 24 24" aria-hidden="true"><circle r="9"/><circle r="5" stroke-dasharray="5 3"/><circle r="1.6" fill="currentColor" stroke="none"/></svg>';
 document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=I[e.dataset.i]);
 // ===== КОНФИГ — сюда добавляем новые идеи =====
@@ -1387,6 +1402,60 @@ async function bootSave(){
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(saveT);saveGame(true);flushCloud()}});
 addEventListener('pagehide',()=>{clearTimeout(saveT);saveGame(true);flushCloud()});
 
+
+// ===== МАСШТАБ И ПЕРЕМЕЩЕНИЕ КАРТЫ: щипок двумя пальцами, перетаскивание одним пальцем, кнопка-лупа =====
+// Масштаб — CSS-трансформация канваса, поэтому cellAt() (по getBoundingClientRect) продолжает попадать в нужную клетку.
+// Касание пальцем обрабатывается при отпускании: так щипок не ставит башню первым пальцем. Кисть дороги/ластик работают сразу, как раньше.
+var VZ={z:1,tx:0,ty:0,mode:'idle',pts:new Map(),g:null,bgT:0,ZMAX:2.5};
+function viewBox(){const pt=document.body.classList.contains('portrait'),vh=innerHeight,Ly=cv.offsetTop;
+  return{vw:innerWidth,Lx:cv.offsetLeft,Ly,mw:cv.offsetWidth,mh:cv.offsetHeight,pt,aT:pt?Ly:0,aB:pt?vh-72:vh}}
+function applyView(){
+  const b=viewBox(),z=VZ.z,w=b.mw*z,h=b.mh*z,av=b.aB-b.aT;
+  VZ.tx=w<=b.vw+.5?(b.vw-w)/2-b.Lx:Math.min(-b.Lx,Math.max(b.vw-w-b.Lx,VZ.tx));
+  VZ.ty=h<=av+.5?(b.pt?b.aT-b.Ly:b.aT+(av-h)/2-b.Ly):Math.min(b.aT-b.Ly,Math.max(b.aB-h-b.Ly,VZ.ty));
+  cv.style.transformOrigin='0 0';cv.style.transform=z===1?'':`translate(${VZ.tx}px,${VZ.ty}px) scale(${z})`;
+  const zb=$('zoomBtn');if(zb)zb.classList.toggle('on',z>1.02);
+  clearTimeout(VZ.bgT);VZ.bgT=setTimeout(drawBg,150); // лес за картой перерисуется в новом масштабе, когда жест закончится
+}
+function viewReset(){VZ.z=1;VZ.tx=VZ.ty=0;VZ.mode='idle';VZ.pts.clear();cv.style.transform='';const zb=$('zoomBtn');if(zb)zb.classList.remove('on')}
+function zoomAbout(nz,ax,ay){const b=viewBox(),z=VZ.z;nz=Math.max(1,Math.min(VZ.ZMAX,nz));
+  const px=(ax-b.Lx-VZ.tx)/z,py=(ay-b.Ly-VZ.ty)/z;VZ.z=nz;VZ.tx=ax-b.Lx-nz*px;VZ.ty=ay-b.Ly-nz*py;applyView()}
+(function(){
+  const wrap=$('wrap'),touch=e=>e.pointerType==='touch'||e.pointerType==='pen',dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  let replaying=false;
+  const two=()=>{const a=[...VZ.pts.values()];return a.length>=2?[a[0],a[1]]:null};
+  wrap.addEventListener('pointerdown',e=>{
+    if(replaying||!touch(e))return;
+    VZ.pts.set(e.pointerId,{x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,tgt:e.target});
+    if(VZ.pts.size>=2){painting=false;VZ.mode='pinch';const[a,b]=two();VZ.g={d:Math.max(1,dist(a,b)),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,z:VZ.z,tx:VZ.tx,ty:VZ.ty};e.stopPropagation();return}
+    if(!S.over&&MAPT[S.build]&&e.target===cv){VZ.mode='pass';return}
+    VZ.mode='hold';e.stopPropagation();
+  },true);
+  wrap.addEventListener('pointermove',e=>{
+    const p=VZ.pts.get(e.pointerId);if(!p||replaying)return;
+    const ox=p.x,oy=p.y;p.x=e.clientX;p.y=e.clientY;
+    if(VZ.mode==='pinch'){e.stopPropagation();const t=two();if(!t)return;const[a,b]=t,g=VZ.g,bx=viewBox();
+      const nz=Math.max(1,Math.min(VZ.ZMAX,g.z*dist(a,b)/g.d)),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,lx=(g.mx-bx.Lx-g.tx)/g.z,ly=(g.my-bx.Ly-g.ty)/g.z;
+      VZ.z=nz;VZ.tx=mx-bx.Lx-nz*lx;VZ.ty=my-bx.Ly-nz*ly;applyView();return}
+    if(VZ.mode==='hold'&&Math.hypot(p.x-p.sx,p.y-p.sy)>12)VZ.mode=VZ.z>1.02?'pan':'ignore';
+    if(VZ.mode==='pan'){e.stopPropagation();VZ.tx+=p.x-ox;VZ.ty+=p.y-oy;applyView()}
+    else if(VZ.mode==='ignore')e.stopPropagation();
+  },true);
+  const end=e=>{
+    const p=VZ.pts.get(e.pointerId);if(!p||replaying)return;VZ.pts.delete(e.pointerId);
+    if(VZ.mode==='hold'&&e.type==='pointerup'&&p.tgt===cv){ // короткое касание без сдвига: выполняем отложенное нажатие
+      replaying=true;cv.dispatchEvent(new PointerEvent('pointerdown',{pointerId:e.pointerId,pointerType:e.pointerType,clientX:p.sx,clientY:p.sy,bubbles:true,cancelable:true,isPrimary:true,button:0,buttons:1}));replaying=false}
+    if(!VZ.pts.size)VZ.mode='idle';else if(VZ.mode==='pinch'&&VZ.pts.size<2)VZ.mode='ignore';
+  };
+  wrap.addEventListener('pointerup',end,true);wrap.addEventListener('pointercancel',end,true);
+  if(matchMedia('(pointer:coarse)').matches){
+    const zb=document.createElement('button');zb.id='zoomBtn';zb.innerHTML=I.zoom;zb.title='Увеличить карту';
+    zb.onclick=()=>{const lv=[1,1.7,2.5],i=lv.findIndex(x=>Math.abs(x-VZ.z)<.05),n=i<0?1:lv[(i+1)%lv.length],b=viewBox();
+      if(n===1){VZ.z=1;VZ.tx=VZ.ty=0;applyView()}else zoomAbout(n,b.vw/2,(b.aT+b.aB)/2)};
+    $('tr').append(zb);
+  }
+})();
+
 let last=performance.now();
 function loop(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -1415,7 +1484,7 @@ function drawBg(){ // продолжение карты: та же трава и
   const gl=g.createRadialGradient(w/2,h/2,Math.min(w,h)*.3,w/2,h/2,Math.hypot(w,h)*.55);gl.addColorStop(0,'rgba(0,0,0,0)');gl.addColorStop(1,'rgba(0,12,2,.55)');
   g.fillStyle=gl;g.fillRect(0,0,w,h);
 }
-function fit(){const k=Math.min(innerWidth/W,innerHeight/H);cv.style.width=W*k+'px';cv.style.height=H*k+'px';document.body.classList.toggle('portrait',innerHeight>innerWidth);drawBg()}
+function fit(){viewReset();const k=Math.min(innerWidth/W,innerHeight/H);cv.style.width=W*k+'px';cv.style.height=H*k+'px';document.body.classList.toggle('portrait',innerHeight>innerWidth);document.documentElement.style.setProperty('--mapb',(cv.offsetTop+cv.offsetHeight)+'px');drawBg()}
 addEventListener('resize',fit);addEventListener('orientationchange',fit);fit();
 defaultMap();reset();bootSave().catch(e=>{console.warn(e);bootDone=true}).then(()=>requestAnimationFrame(loop));
 </script>
