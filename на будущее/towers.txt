@@ -1,0 +1,29 @@
+  // ===== COMMON =====
+  crossbow:{name:'Арбалет',rarity:'common',cost:55,range:145,dmg:16,rate:1.2,color:'#b07a4a',speed:700},
+  knives:{name:'Метальщик',rarity:'common',cost:45,range:100,dmg:7,rate:2.9,color:'#c8ccd4',speed:540},
+  dart:{name:'Дротик',rarity:'common',cost:40,range:110,dmg:6,rate:3.2,color:'#7fa86a',speed:600},
+  rocks:{name:'Камнемёт',rarity:'common',cost:50,range:120,dmg:15,rate:1,color:'#8f8f8f',speed:320,splash:35},
+  bees:{name:'Улей',rarity:'common',cost:65,range:95,dmg:5,rate:2.6,color:'#e3c04a',speed:420,dot:{dps:4,time:2}},
+
+  // ===== RARE =====
+  flame:{name:'Огнемёт',rarity:'rare',cost:115,range:85,dmg:5,rate:3.2,color:'#ff6a2a',speed:300,splash:30,dot:{dps:8,time:2}},
+  harpoon:{name:'Гарпун',rarity:'rare',cost:100,range:165,dmg:34,rate:1,color:'#6f8fa8',speed:820,pierce:true},
+  shuriken:{name:'Сюрикен',rarity:'rare',cost:95,range:130,dmg:12,rate:2.4,color:'#c0c6cf',speed:900,multi:2},
+  acid:{name:'Кислота',rarity:'rare',cost:105,range:120,dmg:8,rate:1.6,color:'#9ae04a',speed:430,ap:true,dot:{dps:7,time:4}},
+  net:{name:'Сеть',rarity:'rare',cost:90,range:125,dmg:5,rate:1.6,color:'#d8d2c0',speed:520,slow:.45,slowTime:2},
+  boomerang:{name:'Бумеранг',rarity:'rare',cost:100,range:145,dmg:20,rate:1.3,color:'#d6a05a',speed:620,pierce:true},
+  forge:{name:'Кузница',rarity:'rare',cost:120,range:115,dmg:0,rate:0,color:'#ff9a3a',speed:0,aura:.18},
+
+  // ===== EPIC =====
+  railgun:{name:'Рельса',rarity:'epic',cost:185,range:265,dmg:110,rate:.5,color:'#5f8dff',speed:3000,pierce:true,ap:true},
+  meteor:{name:'Метеор',rarity:'epic',cost:175,range:210,dmg:60,rate:.6,color:'#e06a2a',speed:380,splash:85},
+  plague:{name:'Чума',rarity:'epic',cost:160,range:130,dmg:10,rate:1.2,color:'#8fbf3a',speed:400,splash:45,dot:{dps:18,time:4}},
+  vine:{name:'Лоза',rarity:'epic',cost:150,range:140,dmg:16,rate:1.3,color:'#4fae5a',speed:450,splash:50,slow:.3,slowTime:2.5},
+  quake:{name:'Землетряс',rarity:'epic',cost:170,range:120,dmg:30,rate:.7,color:'#a0724a',speed:500,splash:70,stun:.25},
+  mirror:{name:'Зеркало',rarity:'epic',cost:155,range:175,dmg:26,rate:1.5,color:'#b0e0f0',speed:1400,chain:4},
+
+  // ===== LEGENDARY =====
+  sun:{name:'Солнце',rarity:'legendary',cost:450,range:230,dmg:180,rate:1.3,color:'#ffd23a',speed:800,splash:110,dot:{dps:25,time:3}},
+  titan:{name:'Титан',rarity:'legendary',cost:460,range:150,dmg:400,rate:.5,color:'#8a8f9a',speed:350,splash:60,stun:.4},
+  blackhole:{name:'Чёрная дыра',rarity:'legendary',cost:440,range:180,dmg:40,rate:.9,color:'#5a3fd9',speed:260,splash:95,slow:.2,slowTime:2},
+  specter:{name:'Призрак',rarity:'legendary',cost:400,range:200,dmg:130,rate:1.5,color:'#a8d8ff',speed:1600,pierce:true,ap:true},
